@@ -3196,6 +3196,13 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .props     = AV_CODEC_PROP_LOSSY,
     },
     {
+        .id        = AV_CODEC_ID_MPEGH_3D_AUDIO_A,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "mpegh_3d_audio",
+        .long_name = NULL_IF_CONFIG_SMALL("MPEG-H 3D Audio MHA1"),
+        .props     = AV_CODEC_PROP_LOSSY,
+    },
+    {
         .id        = AV_CODEC_ID_SIREN,
         .type      = AVMEDIA_TYPE_AUDIO,
         .name      = "siren",

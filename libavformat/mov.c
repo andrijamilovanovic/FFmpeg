@@ -4848,7 +4848,11 @@ static int mov_read_trun(MOVContext *c, AVIOContext *pb, MOVAtom atom)
         } else if (frag_stream_info->sidx_pts != AV_NOPTS_VALUE) {
             // FIXME: sidx earliest_presentation_time is *PTS*, s.b.
             // pts = frag_stream_info->sidx_pts;
+            if( c->frag_index.current == 0)
             dts = frag_stream_info->sidx_pts - sc->time_offset;
+            else
+                dts = frag_stream_info->sidx_pts;
+            
             av_log(c->fc, AV_LOG_DEBUG, "found sidx time %"PRId64
                     ", using it for pts\n", pts);
         } else if (frag_stream_info->tfdt_dts != AV_NOPTS_VALUE) {
@@ -5448,6 +5452,29 @@ static int mov_read_smdm(MOVContext *c, AVIOContext *pb, MOVAtom atom)
     sc->mastering->has_primaries = 1;
     sc->mastering->has_luminance = 1;
 
+    return 0;
+}
+static int mov_read_mhac(MOVContext *c, AVIOContext *pb, MOVAtom atom)
+{
+    MOVStreamContext *sc;
+    int ret;
+    AVStream *st;
+    
+    if (c->fc->nb_streams < 1)
+        return AVERROR_INVALIDDATA;
+    
+    st = c->fc->streams[c->fc->nb_streams-1];
+    
+    sc = st->priv_data;
+    
+    avio_rb24(pb);     //skip
+    int size = avio_rb16(pb);
+
+    if ((ret = ff_alloc_extradata(st->codecpar, size)) < 0)
+        return ret;
+
+    avio_read(pb, st->codecpar->extradata, size);
+    
     return 0;
 }
 
@@ -6984,6 +7011,7 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 { MKTAG('c','l','l','i'), mov_read_clli },
 { MKTAG('d','v','c','C'), mov_read_dvcc_dvvc },
 { MKTAG('d','v','v','C'), mov_read_dvcc_dvvc },
+{ MKTAG('m','h','a','C'), mov_read_mhac },
 { 0, NULL }
 };
 
