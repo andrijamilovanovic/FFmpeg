@@ -17,15 +17,15 @@
 #include "unary.h"
 
 
-typedef struct MPEGHContext
+typedef struct NoneDecodeContext
 {
     AVClass *class;
     
-} MPEGHContext;
+} NoneDecodeContext;
 
-static av_cold int mpegh_decode_init(AVCodecContext *avctx)
+static av_cold int passthrough_decode_init(AVCodecContext *avctx)
 {
-    MPEGHContext *s = avctx->priv_data;
+    NoneDecodeContext *s = avctx->priv_data;
 
     avctx->channels = 2;
     avctx->sample_fmt = avctx->codec->sample_fmts[0];
@@ -34,7 +34,7 @@ static av_cold int mpegh_decode_init(AVCodecContext *avctx)
     return 0;
 }
 
-static int mpegh_decode_frame(AVCodecContext *avctx, void *data,
+static int passthrough_decode_frame(AVCodecContext *avctx, void *data,
                              int *got_frame_ptr, AVPacket *avpkt)
 {
     const uint8_t *src = avpkt->data;
@@ -58,20 +58,41 @@ static const AVOption options[] = {
 { NULL },
 };
 
+static const AVClass passthrough_decoder_class = {
+    .class_name = "Passthrough decoder",
+    .item_name  = av_default_item_name,
+    .option     = options,
+    .version    = LIBAVUTIL_VERSION_INT,
+};
 static const AVClass mpegh_decoder_class = {
     .class_name = "MPEG decoder",
     .item_name  = av_default_item_name,
     .option     = options,
     .version    = LIBAVUTIL_VERSION_INT,
 };
+
+AVCodec ff_passthrough_decoder = {
+    .name           = "ac4",
+    .type           = AVMEDIA_TYPE_AUDIO,
+    .id             = AV_CODEC_ID_AC4,
+    .priv_data_size = sizeof (NoneDecodeContext),
+    .init           = passthrough_decode_init,
+    .decode         = passthrough_decode_frame,
+    .capabilities   = AV_CODEC_CAP_DR1,
+    .long_name      = NULL_IF_CONFIG_SMALL("AC-4"),
+    .sample_fmts    = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_U8P,
+                                                     AV_SAMPLE_FMT_NONE },
+};
+
+
 AVCodec ff_mpegh_a_decoder = {
     .name           = "mpegh",
     .long_name      = NULL_IF_CONFIG_SMALL("MPEGH codec"),
     .type           = AVMEDIA_TYPE_AUDIO,
     .id             = AV_CODEC_ID_MPEGH_3D_AUDIO,
-    .priv_data_size = sizeof(MPEGHContext),
-    .init           = mpegh_decode_init,
-    .decode         = mpegh_decode_frame,
+    .priv_data_size = sizeof(NoneDecodeContext),
+    .init           = passthrough_decode_init,
+    .decode         = passthrough_decode_frame,
     .capabilities   = AV_CODEC_CAP_DR1, // | AV_CODEC_CAP_FRAME_THREADS,
     .sample_fmts    = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_U8P,
                                                       AV_SAMPLE_FMT_NONE },
@@ -82,9 +103,9 @@ AVCodec ff_mpegh_m_decoder = {
     .long_name      = NULL_IF_CONFIG_SMALL("MPEGH codec"),
     .type           = AVMEDIA_TYPE_AUDIO,
     .id             = AV_CODEC_ID_MPEGH_3D_AUDIO_A,
-    .priv_data_size = sizeof(MPEGHContext),
-    .init           = mpegh_decode_init,
-    .decode         = mpegh_decode_frame,
+    .priv_data_size = sizeof(NoneDecodeContext),
+    .init           = passthrough_decode_init,
+    .decode         = passthrough_decode_frame,
     .capabilities   = AV_CODEC_CAP_DR1 , //| AV_CODEC_CAP_FRAME_THREADS,
     .sample_fmts    = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_U8P,
                                                       AV_SAMPLE_FMT_NONE },
