@@ -1297,4 +1297,4 @@ $(SUBDIR)mpegaudiodec_float.o: $(SUBDIR)mpegaudio_tables.h
 $(SUBDIR)pcm.o: $(SUBDIR)pcm_tables.h
 $(SUBDIR)qdm2.o: $(SUBDIR)qdm2_tables.h
 $(SUBDIR)sinewin.o: $(SUBDIR)sinewin_tables.h
-endif
+endif 

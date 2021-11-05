@@ -25,11 +25,13 @@ typedef struct NoneDecodeContext
 
 static av_cold int passthrough_decode_init(AVCodecContext *avctx)
 {
-    NoneDecodeContext *s = avctx->priv_data;
+    //NoneDecodeContext *s = avctx->priv_data;
 
     avctx->channels = 2;
     avctx->sample_fmt = avctx->codec->sample_fmts[0];
     avctx->bits_per_raw_sample = 8;
+    
+    av_log(avctx, AV_LOG_DEBUG, "===== Set channel count\n");
 
     return 0;
 }
@@ -41,6 +43,12 @@ static int passthrough_decode_frame(AVCodecContext *avctx, void *data,
     int buf_size       = avpkt->size;
     int ret;
     AVFrame *frame     = data;
+    
+    // set every time
+    avctx->channels = 2;
+    avctx->sample_fmt = avctx->codec->sample_fmts[0];
+    
+    av_log(avctx, AV_LOG_DEBUG, "===== decode frame %d\n", buf_size);
     
     frame->nb_samples = buf_size;
     if ((ret = ff_get_buffer(avctx, frame, 0)) < 0)
@@ -82,6 +90,7 @@ AVCodec ff_passthrough_decoder = {
     .long_name      = NULL_IF_CONFIG_SMALL("AC-4"),
     .sample_fmts    = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_U8P,
                                                      AV_SAMPLE_FMT_NONE },
+    .priv_class     = &passthrough_decoder_class
 };
 
 
@@ -93,7 +102,7 @@ AVCodec ff_mpegh_a_decoder = {
     .priv_data_size = sizeof(NoneDecodeContext),
     .init           = passthrough_decode_init,
     .decode         = passthrough_decode_frame,
-    .capabilities   = AV_CODEC_CAP_DR1, // | AV_CODEC_CAP_FRAME_THREADS,
+    .capabilities   = AV_CODEC_CAP_CHANNEL_CONF | AV_CODEC_CAP_DR1, // | AV_CODEC_CAP_FRAME_THREADS,
     .sample_fmts    = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_U8P,
                                                       AV_SAMPLE_FMT_NONE },
     .priv_class     = &mpegh_decoder_class,
@@ -106,7 +115,7 @@ AVCodec ff_mpegh_m_decoder = {
     .priv_data_size = sizeof(NoneDecodeContext),
     .init           = passthrough_decode_init,
     .decode         = passthrough_decode_frame,
-    .capabilities   = AV_CODEC_CAP_DR1 , //| AV_CODEC_CAP_FRAME_THREADS,
+    .capabilities   = AV_CODEC_CAP_CHANNEL_CONF | AV_CODEC_CAP_DR1 , //| AV_CODEC_CAP_FRAME_THREADS,
     .sample_fmts    = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_U8P,
                                                       AV_SAMPLE_FMT_NONE },
     .priv_class     = &mpegh_decoder_class,
