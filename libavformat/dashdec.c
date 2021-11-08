@@ -1619,15 +1619,15 @@ static struct fragment *get_current_fragment(struct representation *pls)
             refresh_manifest(pls->parent);
         }
         
-        av_log(pls->parent, AV_LOG_VERBOSE, "#### before fragment: cur[%"PRId64"] min[%"PRId64"] max[%"PRId64"]\n", (int64_t)pls->cur_seq_no, min_seq_no, max_seq_no);
+        av_log(pls->parent, AV_LOG_TRACE, "#### before fragment: cur[%"PRId64"] min[%"PRId64"] max[%"PRId64"]\n", (int64_t)pls->cur_seq_no, min_seq_no, max_seq_no);
         
         if (pls->cur_seq_no <= min_seq_no) {
             pls->cur_seq_no = calc_cur_seg_no(pls->parent, pls);
         } else if (pls->cur_seq_no > max_seq_no) {
-            av_log(pls->parent, AV_LOG_VERBOSE, "do nothing");
+            av_log(pls->parent, AV_LOG_TRACE, "#### do nothing");
         }
         
-        av_log(pls->parent, AV_LOG_VERBOSE, "#### after fragment: cur[%"PRId64"] min[%"PRId64"] max[%"PRId64"]\n");
+        av_log(pls->parent, AV_LOG_TRACE, "#### after fragment: cur[%"PRId64"]\n", (int64_t)pls->cur_seq_no);
         
         seg = av_mallocz(sizeof(struct fragment));
         if (!seg) {
@@ -1800,7 +1800,7 @@ restart:
                 ret = AVERROR_EXIT;
                 goto end;
             }
-            av_log(v->parent, AV_LOG_WARNING, "#### Failed to open fragment of playlist\n");
+            av_log(v->parent, AV_LOG_TRACE, "#### Failed to open fragment of playlist\n");
             v->cur_seq_no++;
             goto restart;
         }
@@ -1832,7 +1832,7 @@ restart:
             v->cur_seq_no++;
         v->is_restart_needed = 1;
         
-        av_log(v->parent, AV_LOG_WARNING, "#### fragment incremented %lld\n", v->cur_seq_no);
+        av_log(v->parent, AV_LOG_TRACE, "#### fragment incremented %lld\n", v->cur_seq_no);
     }
 
 end:
