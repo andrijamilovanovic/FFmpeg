@@ -27,6 +27,7 @@
 #include "internal.h"
 #include "avio_internal.h"
 #include "dash.h"
+#include <stdbool.h>
 
 #define INITIAL_BUFFER_SIZE 32768
 #define MAX_BPRINT_READ_SIZE (UINT_MAX - 1)
@@ -1373,7 +1374,7 @@ cleanup:
     return ret;
 }
 
-static int64_t calc_cur_seg_no(AVFormatContext *s, struct representation *pls)
+static int64_t calc_cur_seg_no(AVFormatContext *s, struct representation *pls, bool init)
 {
     DASHContext *c = s->priv_data;
     int64_t num = 0;
@@ -1396,13 +1397,18 @@ static int64_t calc_cur_seg_no(AVFormatContext *s, struct representation *pls)
             if (pls->presentation_timeoffset) {
                 num = pls->first_seq_no + (((get_current_time_in_sec() - c->availability_start_time) * pls->fragment_timescale)-pls->presentation_timeoffset) / pls->fragment_duration - c->min_buffer_time;
             } else if (c->publish_time > 0 && !c->availability_start_time) {
+               
                 if (c->min_buffer_time) {
                     num = pls->first_seq_no + (((c->publish_time + pls->fragment_duration) - c->suggested_presentation_delay) * pls->fragment_timescale) / pls->fragment_duration - c->min_buffer_time;
                 } else {
                     num = pls->first_seq_no + (((c->publish_time - c->time_shift_buffer_depth + pls->fragment_duration) - c->suggested_presentation_delay) * pls->fragment_timescale) / pls->fragment_duration;
                 }
             } else {
-                num = pls->first_seq_no + (((get_current_time_in_sec() - c->availability_start_time) - c->suggested_presentation_delay) * pls->fragment_timescale) / pls->fragment_duration;
+                if( init ) {
+                    num = pls->first_seq_no + (((get_current_time_in_sec() - c->availability_start_time) - c->suggested_presentation_delay) * pls->fragment_timescale) / pls->fragment_duration;
+                } else {
+                    return pls->cur_seq_no; // We already incremented, let's hope everything is fine.
+                }
             }
         }
     } else {
@@ -1417,7 +1423,6 @@ static int64_t calc_min_seg_no(AVFormatContext *s, struct representation *pls)
     int64_t num = 0;
 
     if (c->is_live && pls->fragment_duration) {
-        av_log(s, AV_LOG_TRACE, "in live mode\n");
         num = pls->first_seq_no + (((get_current_time_in_sec() - c->availability_start_time) - c->time_shift_buffer_depth) * pls->fragment_timescale) / pls->fragment_duration;
     } else {
         num = pls->first_seq_no;
@@ -1612,6 +1617,7 @@ static struct fragment *get_current_fragment(struct representation *pls)
         }
     }
     if (c->is_live) {
+
         min_seq_no = calc_min_seg_no(pls->parent, pls);
         max_seq_no = calc_max_seg_no(pls, c);
 
@@ -1619,15 +1625,9 @@ static struct fragment *get_current_fragment(struct representation *pls)
             refresh_manifest(pls->parent);
         }
         
-        av_log(pls->parent, AV_LOG_TRACE, "#### before fragment: cur[%"PRId64"] min[%"PRId64"] max[%"PRId64"]\n", (int64_t)pls->cur_seq_no, min_seq_no, max_seq_no);
-        
         if (pls->cur_seq_no <= min_seq_no) {
-            pls->cur_seq_no = calc_cur_seg_no(pls->parent, pls);
-        } else if (pls->cur_seq_no > max_seq_no) {
-            av_log(pls->parent, AV_LOG_TRACE, "#### do nothing");
+            pls->cur_seq_no = calc_cur_seg_no(pls->parent, pls, false);
         }
-        
-        av_log(pls->parent, AV_LOG_TRACE, "#### after fragment: cur[%"PRId64"]\n", (int64_t)pls->cur_seq_no);
         
         seg = av_mallocz(sizeof(struct fragment));
         if (!seg) {
@@ -1782,12 +1782,19 @@ static int read_data(void *opaque, uint8_t *buf, int buf_size)
 
 restart:
     if (!v->input) {
+
+        av_log(v->parent, AV_LOG_TRACE, "#### need new fragment %lld\n", v->cur_seq_no);
+        
         free_fragment(&v->cur_seg);
         v->cur_seg = get_current_fragment(v);
+
         if (!v->cur_seg) {
             ret = AVERROR_EOF;
             goto end;
         }
+        
+        av_log(v->parent, AV_LOG_TRACE, "#### here is a new fragment %lld\n", v->cur_seq_no);
+        
 
         /* load/update Media Initialization Section, if any */
         ret = update_init_section(v);
@@ -1801,7 +1808,8 @@ restart:
                 goto end;
             }
             av_log(v->parent, AV_LOG_TRACE, "#### Failed to open fragment of playlist\n");
-            v->cur_seq_no++;
+            av_usleep(500*1000); // sleep 500ms
+            //v->cur_seq_no++;
             goto restart;
         }
     }
@@ -1961,7 +1969,7 @@ static int open_demux_for_component(AVFormatContext *s, struct representation *p
     int i;
 
     pls->parent = s;
-    pls->cur_seq_no  = calc_cur_seg_no(s, pls);
+    pls->cur_seq_no  = calc_cur_seg_no(s, pls, true);
 
     if (!pls->last_seq_no) {
         pls->last_seq_no = calc_max_seg_no(pls, s->priv_data);

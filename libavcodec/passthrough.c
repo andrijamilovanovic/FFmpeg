@@ -30,8 +30,6 @@ static av_cold int passthrough_decode_init(AVCodecContext *avctx)
     avctx->channels = 2;
     avctx->sample_fmt = avctx->codec->sample_fmts[0];
     avctx->bits_per_raw_sample = 8;
-    
-    av_log(avctx, AV_LOG_DEBUG, "===== Set channel count\n");
 
     return 0;
 }
@@ -47,8 +45,6 @@ static int passthrough_decode_frame(AVCodecContext *avctx, void *data,
     // set every time
     avctx->channels = 2;
     avctx->sample_fmt = avctx->codec->sample_fmts[0];
-    
-    av_log(avctx, AV_LOG_DEBUG, "===== decode frame %d\n", buf_size);
     
     frame->nb_samples = buf_size;
     if ((ret = ff_get_buffer(avctx, frame, 0)) < 0)
