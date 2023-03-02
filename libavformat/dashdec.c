@@ -1625,9 +1625,15 @@ static struct fragment *get_current_fragment(struct representation *pls)
             refresh_manifest(pls->parent);
         }
         
+        av_log(pls->parent, AV_LOG_VERBOSE, "#### before fragment: cur[%"PRId64"] min[%"PRId64"] max[%"PRId64"]\n", (int64_t)pls->cur_seq_no, min_seq_no, max_seq_no);
+        
         if (pls->cur_seq_no <= min_seq_no) {
             pls->cur_seq_no = calc_cur_seg_no(pls->parent, pls, false);
+        } else {
+            av_log(pls->parent, AV_LOG_VERBOSE, "#### do nothing");
         }
+
+        av_log(pls->parent, AV_LOG_VERBOSE, "#### after fragment: cur[%"PRId64"] \n", (int64_t)pls->cur_seq_no);
         
         seg = av_mallocz(sizeof(struct fragment));
         if (!seg) {
@@ -1836,11 +1842,13 @@ restart:
         goto end;
 
     if (c->is_live || v->cur_seq_no < v->last_seq_no) {
-        if (!v->is_restart_needed)
+        //
+        if (!v->is_restart_needed) {
             v->cur_seq_no++;
+             av_log(v->parent, AV_LOG_TRACE, "#### fragment incremented %lld\n", v->cur_seq_no);
+        }
         v->is_restart_needed = 1;
-        
-        av_log(v->parent, AV_LOG_TRACE, "#### fragment incremented %lld\n", v->cur_seq_no);
+
     }
 
 end:
@@ -2263,11 +2271,14 @@ static int dash_read_packet(AVFormatContext *s, AVPacket *pkt)
             return 0;
         }
         if (cur->is_restart_needed) {
+            av_log(s, AV_LOG_INFO, "#### Restart needed, execute \n");
             cur->cur_seg_offset = 0;
             cur->init_sec_buf_read_offset = 0;
             ff_format_io_close(cur->parent, &cur->input);
             ret = reopen_demux_for_component(s, cur);
             cur->is_restart_needed = 0;
+        } else {
+            av_log(s, AV_LOG_ERROR, "#### Error, lets read frame again \n");
         }
     }
     return AVERROR_EOF;

@@ -1560,6 +1560,7 @@ static int http_read_stream(URLContext *h, uint8_t *buf, int size)
     }
 
     s->reconnect = TRUE;
+    s->reconnect_streamed = TRUE;
 
 #if CONFIG_ZLIB
     if (s->compressed)
@@ -1579,14 +1580,17 @@ static int http_read_stream(URLContext *h, uint8_t *buf, int size)
             !(s->reconnect_at_eof && read_ret == AVERROR_EOF))
             break;
 
-        if (reconnect_delay > s->reconnect_delay_max)
+        if (reconnect_delay > s->reconnect_delay_max) {
+            av_log(h, AV_LOG_WARNING, "#### Reconnection to maximum");
             return AVERROR(EIO);
+        }
 
         av_log(h, AV_LOG_WARNING, "Will reconnect at %"PRIu64" in %d second(s), error=%s.\n", s->off, reconnect_delay, av_err2str(read_ret));
         err = ff_network_sleep_interruptible(1000U*1000*reconnect_delay, &h->interrupt_callback);
         if (err != AVERROR(ETIMEDOUT))
             return err;
         reconnect_delay = 1 + 2*reconnect_delay;
+        av_log(h, AV_LOG_WARNING, "#### New Reconnection delay %d second(s)",reconnect_delay);
         seek_ret = http_seek_internal(h, target, SEEK_SET, 1);
         if (seek_ret >= 0 && seek_ret != target) {
             av_log(h, AV_LOG_ERROR, "Failed to reconnect at %"PRIu64".\n", target);

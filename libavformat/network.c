@@ -84,16 +84,17 @@ int ff_network_wait_fd_timeout(int fd, int write, int64_t timeout, AVIOInterrupt
         if (ff_check_interrupt(int_cb))
             return AVERROR_EXIT;
         ret = ff_network_wait_fd(fd, write);
-        if (ret != AVERROR(EAGAIN))
+        if (ret != AVERROR(EAGAIN)) {
             return ret;
+        }
         if (timeout > 0) {
             if (!wait_start)
                 wait_start = av_gettime_relative();
             else if (av_gettime_relative() - wait_start > timeout)
                 return AVERROR(ETIMEDOUT);
+            }
         }
     }
-}
 
 int ff_network_sleep_interruptible(int64_t timeout, AVIOInterruptCB *int_cb)
 {
