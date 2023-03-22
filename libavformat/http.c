@@ -1559,8 +1559,8 @@ static int http_read_stream(URLContext *h, uint8_t *buf, int size)
             return err;
     }
 
-    s->reconnect = true;
-    s->reconnect_streamed = true;
+    s->reconnect = 1;
+    s->reconnect_streamed = 1;
 
 #if CONFIG_ZLIB
     if (s->compressed)
