@@ -7227,6 +7227,7 @@ static const AVCodecTag codec_mp4_tags[] = {
     { AV_CODEC_ID_BIN_DATA,        MKTAG('g', 'p', 'm', 'd') },
     { AV_CODEC_ID_MPEGH_3D_AUDIO,  MKTAG('m', 'h', 'm', '1') },
     { AV_CODEC_ID_MPEGH_3D_AUDIO_A,MKTAG('m', 'h', 'a', '1') },
+    { AV_CODEC_ID_AURO,            MKTAG('a', '3', 'd', 's') }, 
     { AV_CODEC_ID_AC4,             MKTAG('a', 'c', '-', '4') }, /* ETSI TS 103 190 */
     { AV_CODEC_ID_NONE,               0 },
 };

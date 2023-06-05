@@ -116,3 +116,17 @@ AVCodec ff_mpegh_m_decoder = {
                                                       AV_SAMPLE_FMT_NONE },
     .priv_class     = &mpegh_decoder_class,
 };
+
+AVCodec ff_auro_m_decoder = {
+    .name           = "auro",
+    .long_name      = NULL_IF_CONFIG_SMALL("auro codec"),
+    .type           = AVMEDIA_TYPE_AUDIO,
+    .id             = AV_CODEC_ID_AURO,
+    .priv_data_size = sizeof(NoneDecodeContext),
+    .init           = passthrough_decode_init,
+    .decode         = passthrough_decode_frame,
+    .capabilities   = AV_CODEC_CAP_CHANNEL_CONF | AV_CODEC_CAP_DR1 , //| AV_CODEC_CAP_FRAME_THREADS,
+    .sample_fmts    = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_U8P,
+                                                      AV_SAMPLE_FMT_NONE },
+    .priv_class     = &mpegh_decoder_class,
+};

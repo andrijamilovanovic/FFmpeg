@@ -3210,6 +3210,13 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .props     = AV_CODEC_PROP_LOSSY,
     },
     {
+        .id        = AV_CODEC_ID_AURO,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "auro",
+        .long_name = NULL_IF_CONFIG_SMALL("Auro decoder"),
+        .props     = AV_CODEC_PROP_LOSSY,
+    },
+    {
         .id        = AV_CODEC_ID_SIREN,
         .type      = AVMEDIA_TYPE_AUDIO,
         .name      = "siren",

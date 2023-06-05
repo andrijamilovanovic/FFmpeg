@@ -333,6 +333,7 @@ const AVCodecTag ff_codec_movaudio_tags[] = {
     { AV_CODEC_ID_OPUS,            MKTAG('O', 'p', 'u', 's') }, /* mp4ra.org */
     { AV_CODEC_ID_MPEGH_3D_AUDIO,  MKTAG('m', 'h', 'm', '1') }, /* MPEG-H 3D Audio bitstream */
     { AV_CODEC_ID_MPEGH_3D_AUDIO_A,MKTAG('m', 'h', 'a', '1') }, /* MPEG-H 3D Audio bitstream */
+    { AV_CODEC_ID_AURO,            MKTAG('a', '3', 'd', 's') }, /* Auro Audio bitstream */
     { AV_CODEC_ID_AC4,             MKTAG('a', 'c', '-', '4') }, /* ETSI TS 103 190 */
     { AV_CODEC_ID_NONE, 0 },
 };
